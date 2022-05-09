@@ -283,13 +283,11 @@ public sealed partial class Floating : IAsyncDisposable
                 _offset.Height = Offset!.Height;
             }
 
+            //支持重新渲染浮动内容
+            Context!.ExecuteAfterRender(Toggle);
             if (FirstRendered)
             {
-                await Toggle();
-            }
-            else
-            {
-                Context!.ExecuteAfterRender(Toggle);
+                Context!.UpdateFragment(Visible);
             }
         }
     }

@@ -31,6 +31,18 @@ public partial class FloatingContent : IDisposable
     [Parameter]
     public FloatingContext? Context { get; set; }
 
+    /// <summary>
+    /// OnInitialized
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (Context != null)
+        {
+            Context.FragmentChanged += OnFragmentChanged;
+        }
+    }
+
 
     /// <summary>
     /// OnAfterRenderAsync
