@@ -50,6 +50,20 @@ console.log('test');
         AsyncValue = $"### {DateTime.Now}";
     }
 
+    private Task OnValueChanged(string value)
+    {
+        MarkdownString = value;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnHtmlChanged(string value)
+    {
+        HtmlString = value;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
     private IEnumerable<AttributeItem> GetAttributes() => new AttributeItem[]
     {
         new AttributeItem(){
@@ -103,14 +117,14 @@ console.log('test');
         },
         new AttributeItem(){
             Name = "IsDark",
-            Description = "是否为暗黑模式",
+            Description = Localizer["Att8"],
             Type = "bool",
             ValueList = " true/false ",
             DefaultValue = " false "
         },
         new AttributeItem(){
             Name = "EnableHighlight",
-            Description = "是否启用代码高亮",
+            Description = Localizer["Att9"],
             Type = "bool",
             ValueList = " true/false ",
             DefaultValue = " false "

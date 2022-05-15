@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 using System.Text;
@@ -26,16 +27,20 @@ public class BaiduRecognizerProvider : IRecognizerProvider, IAsyncDisposable
 
     private Baidu.Aip.Speech.Asr Client { get; }
 
+    private ILogger Logger { get; }
+
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="options"></param>
     /// <param name="runtime"></param>
-    public BaiduRecognizerProvider(IOptionsMonitor<BaiduSpeechOption> options, IJSRuntime runtime)
+    /// <param name="logger"></param>
+    public BaiduRecognizerProvider(IOptionsMonitor<BaiduSpeechOption> options, IJSRuntime runtime, ILogger<BaiduRecognizerProvider> logger)
     {
         JSRuntime = runtime;
         SpeechOption = options.CurrentValue;
         Client = new Baidu.Aip.Speech.Asr(SpeechOption.AppId, SpeechOption.ApiKey, SpeechOption.Secret);
+        Logger = logger;
     }
 
     /// <summary>
@@ -46,31 +51,17 @@ public class BaiduRecognizerProvider : IRecognizerProvider, IAsyncDisposable
     /// <exception cref="InvalidOperationException"></exception>
     public async Task InvokeAsync(RecognizerOption option)
     {
-        if (string.IsNullOrEmpty(option.MethodName))
+        if (!string.IsNullOrEmpty(option.MethodName))
         {
-            throw new InvalidOperationException();
-        }
-
-        Option = option;
-        if (Module == null)
-        {
-            Module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/_content/BootstrapBlazor.BaiduSpeech/js/recognizer.js");
-        }
-        Interop ??= DotNetObjectReference.Create(this);
-        await Module.InvokeVoidAsync(Option.MethodName, Interop, nameof(Callback), nameof(RecognizeCallback));
-    }
-
-    /// <summary>
-    /// Callback 回调方法
-    /// </summary>
-    /// <param name="result"></param>
-    /// <returns></returns>
-    [JSInvokable]
-    public async Task Callback(string result)
-    {
-        if (Option.Callback != null)
-        {
-            await Option.Callback(result);
+            Option = option;
+            if (Module == null)
+            {
+                var moduleName = "./_content/BootstrapBlazor.BaiduSpeech/js/recognizer.js";
+                Logger.LogInformation($"load module {moduleName}");
+                Module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", moduleName);
+            }
+            Interop ??= DotNetObjectReference.Create(this);
+            await Module.InvokeVoidAsync(Option.MethodName, Interop, nameof(RecognizeCallback), Option.AutoRecoginzerElapsedMilliseconds);
         }
     }
 
@@ -78,24 +69,38 @@ public class BaiduRecognizerProvider : IRecognizerProvider, IAsyncDisposable
     /// RecognizeCallback 回调方法
     /// </summary>
     [JSInvokable]
-    public async Task RecognizeCallback(SynthesizerStatus status, byte[]? bytes)
+    public async Task RecognizeCallback(RecognizerStatus status, byte[]? bytes)
     {
-        string data = "Error";
-        if (status == SynthesizerStatus.Finished)
+        Logger.LogInformation($"RecognizerStatus: {status}");
+        string data = "";
+        if (status == RecognizerStatus.Finished)
         {
-            var result = Client.Recognize(bytes, "wav", 16000);
-            var sb = new StringBuilder();
-            var text = result["result"].ToArray();
-            foreach (var item in text)
+            // 此处同步调用卡 UI 改为异步
+            await Task.Run(() =>
             {
-                sb.Append(item.ToString());
-            }
-            data = sb.ToString();
+                var result = Client.Recognize(bytes, "wav", 16000);
+                var err_no = result.Value<int>("err_no");
+                if (err_no == 0)
+                {
+                    var sb = new StringBuilder();
+                    var text = result["result"].ToArray();
+                    foreach (var item in text)
+                    {
+                        sb.Append(item.ToString());
+                    }
+                    data = sb.ToString();
+                    Logger.LogInformation($"recognizer: {data}");
+                }
+                else
+                {
+                    Logger.LogError($"err_no: {err_no}");
+                }
+            });
         }
 
         if (Option.Callback != null)
         {
-            await Option.Callback(data);
+            await Option.Callback(status, data);
         }
     }
 

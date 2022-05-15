@@ -14,19 +14,22 @@ public class RecognizerTest : SpeechTestBase
     {
         var result = "";
         var recognizerService = Context.Services.GetRequiredService<RecognizerService>();
-        await recognizerService.InvokeAsync(new RecognizerOption()
+        var option = new RecognizerOption()
         {
             MethodName = "Test",
             TargetLanguage = "zh-CN",
             SpeechRecognitionLanguage = "zh-CN",
-            Callback = new Func<string, Task>(v =>
+            AutoRecoginzerElapsedMilliseconds = 5000,
+            Callback = new Func<RecognizerStatus, string?, Task>((status, v) =>
             {
                 result = v;
                 return Task.CompletedTask;
             })
-        });
+        };
+        await recognizerService.InvokeAsync(option);
 
         Assert.Equal("MockSpeechProvider", result);
+        Assert.Equal(5000, option.AutoRecoginzerElapsedMilliseconds);
     }
 
     [Fact]
@@ -41,7 +44,7 @@ public class RecognizerTest : SpeechTestBase
         cut.SetParametersAndRender(pb =>
         {
             pb.Add(a => a.Show, true);
-            pb.Add(a => a.TotalTimeSecond, 60);
+            pb.Add(a => a.TotalTime, 60000);
         });
         cut.Contains("speech-wave");
         cut.Contains("<span>01:00</span>");
@@ -64,7 +67,7 @@ public class RecognizerTest : SpeechTestBase
         var cut = Context.RenderComponent<SpeechWave>(pb =>
         {
             pb.Add(a => a.Show, true);
-            pb.Add(a => a.TotalTimeSecond, 1);
+            pb.Add(a => a.TotalTime, 1);
             pb.Add(a => a.OnTimeout, new Func<Task>(() =>
             {
                 timeout = true;

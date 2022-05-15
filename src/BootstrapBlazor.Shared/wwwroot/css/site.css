@@ -1,5 +1,15 @@
-﻿header {
-    background-color: #7952b3;
+﻿:root {
+    --bb-logo: #732cf9;
+    --bb-purple: #732cf9;
+    --bb-violet: #712cf9;
+    --bb-violet-rgb: 112.520718,44.062154,249.437846;
+    --bb-bg-violet: #7a5cff;
+    --bb-bg-navbar: #8548ff;
+}
+
+header {
+    background-color: transparent;
+    background-image: linear-gradient(to bottom, rgba(var(--bb-violet-rgb), 1), rgba(var(--bb-violet-rgb), 0.95));
     box-shadow: 0 0.5rem 1rem rgba(0,0,0,.05), inset 0 -1px 0 rgba(0,0,0,.1);
     font-size: 1rem;
     transition: transform .3s ease;
@@ -37,9 +47,10 @@ header .nav-link img {
 
     .header-img img,
     .bb-icon {
-        width: 40px;
+        width: 42px;
         height: auto;
         border-radius: var(--bs-border-radius);
+        background-color: var(--bb-logo);
         border: solid 1px #fff;
         margin-right: 1rem;
     }
@@ -115,7 +126,7 @@ section {
     }
 
 .sidebar .navbar {
-    background-color: #8864ca;
+    background-color: var(--bb-bg-navbar);
 }
 
 .sidebar .sidebar-title {
@@ -1891,7 +1902,7 @@ header .bb-fs {
     }
 
 .connection-body img {
-    height: 114px;
+    height: 110px;
     margin-left: 1rem;
 }
 
@@ -1901,7 +1912,7 @@ header .bb-fs {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 2000;
+    z-index: 1900;
     color: #ffffff;
     background: linear-gradient(54.4deg,#771f89 -28.5%,#834cef 30.36%,#636cea 99.19%);
     padding: 1rem;
@@ -1923,31 +1934,31 @@ header .bb-fs {
 
     .blazor-intro .blazor-intro-barcode {
         text-align: center;
+        margin: 1rem 1rem 0 2rem;
     }
 
         .blazor-intro .blazor-intro-barcode img {
-            margin: 0 1rem 0 2rem;
-            width: 120px;
-            border-radius: var(--bs-border-radius);
+            width: 110px;
         }
 
-    .blazor-intro .blazor-intro-close {
-        position: absolute;
-        top: -26px;
-        padding: 1rem;
-        left: calc(50% + 26px);
-        background-color: #7239ea;
-        transition: background-color .3s linear;
-        border-radius: 50%;
-        cursor: pointer;
+.blazor-intro-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: #fff;
+    background-color: #4b4df6;
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 6px;
+    transition: background-color .3s linear;
+}
+
+    .blazor-intro-button:hover {
+        background-color: #3c3de2;
     }
 
-        .blazor-intro .blazor-intro-close:hover {
-            background-color: #5c2bc4;
-        }
-
-    .blazor-intro .blazor-intro-btn {
-        width: 20px;
-        height: 20px;
-        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+    .blazor-intro-button svg {
+        width: 24px;
+        height: 24px;
+        fill: currentcolor;
     }

@@ -6,7 +6,7 @@ using BootstrapBlazor.Shared;
 
 namespace UnitTest.Components;
 
-public class EditorTest : BootstrapBlazorTestBase
+public class EditorTest : Core.BootstrapBlazorTestBase
 {
     [Fact]
     public async Task Editor_Ok()
