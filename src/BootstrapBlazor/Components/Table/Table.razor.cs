@@ -126,7 +126,7 @@ public partial class Table<TItem> : BootstrapComponentBase, IDisposable, ITable 
     /// <summary>
     /// 明细行集合用于数据懒加载
     /// </summary>
-    protected List<TItem> ExpandRows { get; set; } = new List<TItem>();
+    protected List<TItem> ExpandRows { get; } = new List<TItem>();
 
     /// <summary>
     /// 获得/设置 树形数据已展开集合
@@ -752,12 +752,6 @@ public partial class Table<TItem> : BootstrapComponentBase, IDisposable, ITable 
     {
         base.OnParametersSet();
 
-        if (IsPagination && PageItemsSourceChanged)
-        {
-            PageItemsSourceChanged = false;
-            PageItems = PageItemsSource.FirstOrDefault();
-        }
-
         if (ScrollMode == ScrollMode.Virtual)
         {
             IsFixedHeader = true;
@@ -1088,13 +1082,10 @@ public partial class Table<TItem> : BootstrapComponentBase, IDisposable, ITable 
 
         void SetEditTemplate()
         {
-            if (CanSave)
-            {
-                var onValueChanged = Utility.CreateOnValueChanged<TItem>(col.PropertyType).Compile();
-                var parameters = col.ComponentParameters?.ToList() ?? new List<KeyValuePair<string, object>>();
-                parameters.Add(new(nameof(ValidateBase<string>.OnValueChanged), onValueChanged.Invoke(item, col, (model, column, val) => InternalOnSaveAsync(model, ItemChangedType.Update))));
-                col.ComponentParameters = parameters;
-            }
+            var onValueChanged = Utility.CreateOnValueChanged<TItem>(col.PropertyType).Compile();
+            var parameters = col.ComponentParameters?.ToList() ?? new List<KeyValuePair<string, object>>();
+            parameters.Add(new(nameof(ValidateBase<string>.OnValueChanged), onValueChanged.Invoke(item, col, (model, column, val) => InternalOnSaveAsync(model, ItemChangedType.Update))));
+            col.ComponentParameters = parameters;
         }
     }
 

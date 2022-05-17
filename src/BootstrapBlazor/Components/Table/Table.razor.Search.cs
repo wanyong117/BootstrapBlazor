@@ -64,25 +64,25 @@ public partial class Table<TItem>
     public bool ShowSearchText { get; set; } = true;
 
     /// <summary>
-    /// 获得/设置 是否显示搜索框提示文本 默认true
+    /// 获得/设置 是否显示搜索框提示文本 默认 true
     /// </summary>
     [Parameter]
     public bool ShowSearchTextTooltip { get; set; } = true;
 
     /// <summary>
-    /// 获得/设置 是否显示清空搜索按钮 默认显示 <see cref="ShowSearch" />
+    /// 获得/设置 是否显示清空搜索按钮 默认 true 显示 <see cref="ShowSearch" />
     /// </summary>
     [Parameter]
     public bool ShowResetButton { get; set; } = true;
 
     /// <summary>
-    /// 获得/设置 是否显示搜索按钮 默认显示 <see cref="ShowSearch" />
+    /// 获得/设置 是否显示搜索按钮 默认 true 显示 <see cref="ShowSearch" />
     /// </summary>
     [Parameter]
     public bool ShowSearchButton { get; set; } = true;
 
     /// <summary>
-    /// 获得/设置 是否显示高级搜索按钮 默认显示 <see cref="ShowSearch" />
+    /// 获得/设置 是否显示高级搜索按钮 默认 true 显示 <see cref="ShowSearch" />
     /// </summary>
     [Parameter]
     public bool ShowAdvancedSearch { get; set; } = true;
@@ -256,10 +256,8 @@ public partial class Table<TItem>
     protected IEnumerable<IFilterAction> GetAdvanceSearchs()
     {
         var searchs = new List<IFilterAction>();
-        // 处理 SearchModel 条件
-        if (CustomerSearchModel == null && SearchModel != null)
+        if (ShowAdvancedSearch && CustomerSearchModel == null && SearchModel != null)
         {
-            // 处理 SearchModel
             var searchColumns = Columns.Where(i => i.Searchable);
             foreach (var property in SearchModel.GetType().GetProperties().Where(i => searchColumns.Any(col => col.GetFieldName() == i.Name)))
             {
@@ -277,17 +275,7 @@ public partial class Table<TItem>
     /// 通过列集合中的 <see cref="ITableColumn.Searchable"/> 列与 <see cref="SearchText"/> 拼装 IFilterAction 集合
     /// </summary>
     /// <returns></returns>
-    protected IEnumerable<IFilterAction> GetSearchs()
-    {
-        // 处理 SearchText
-        var columns = Columns.Where(col => col.Searchable);
-        var searchs = new List<IFilterAction>();
-        if (!string.IsNullOrEmpty(SearchText))
-        {
-            searchs.AddRange(columns.Where(col => col.Searchable && ((Nullable.GetUnderlyingType(col.PropertyType) ?? col.PropertyType) == typeof(string))).Select(col => new SearchFilterAction(col.GetFieldName(), SearchText)));
-        }
-        return searchs;
-    }
+    protected IEnumerable<IFilterAction> GetSearchs() => Columns.Where(col => col.Searchable).ToSearchs(SearchText);
 
     /// <summary>
     /// 重置搜索按钮调用此方法

@@ -33,12 +33,20 @@ console.log('test');
     [NotNull]
     private Markdown? Markdown { get; set; }
 
+    [NotNull]
+    private Markdown? MarkdownSetValue { get; set; }
+
+    [NotNull]
+    private Foo? Model { get; set; }
+
     /// <summary>
     /// OnInitializedAsync 方法
     /// </summary>
     /// <returns></returns>
     protected override async Task OnInitializedAsync()
     {
+        Model = new() { Name = "Name", Education = EnumEducation.Primary, DateTime = DateTime.Now };
+
         Language = CultureInfo.CurrentUICulture.Name;
         MarkdownString = $"### {Localizer["MarkdownString"]}";
         Version = await VersionManager.GetVersionAsync("bootstrapblazor.markdown");
@@ -48,6 +56,7 @@ console.log('test');
     {
         await Task.Delay(600);
         AsyncValue = $"### {DateTime.Now}";
+        await MarkdownSetValue.SetValue(AsyncValue);
     }
 
     private IEnumerable<AttributeItem> GetAttributes() => new AttributeItem[]
@@ -103,14 +112,14 @@ console.log('test');
         },
         new AttributeItem(){
             Name = "IsDark",
-            Description = "是否为暗黑模式",
+            Description = Localizer["Att8"],
             Type = "bool",
             ValueList = " true/false ",
             DefaultValue = " false "
         },
         new AttributeItem(){
             Name = "EnableHighlight",
-            Description = "是否启用代码高亮插件，启用前需要引入插件对应的js css",
+            Description = Localizer["Att9"],
             Type = "bool",
             ValueList = " true/false ",
             DefaultValue = " false "

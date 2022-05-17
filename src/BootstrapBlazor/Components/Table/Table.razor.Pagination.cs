@@ -30,9 +30,8 @@ public partial class Table<TItem>
     /// 获得/设置 行号列标题文字 默认为 行号
     /// </summary>
     [Parameter]
-    public string LineNoText { get; set; } = "行号";
-
-    private bool PageItemsSourceChanged { get; set; }
+    [NotNull]
+    public string? LineNoText { get; set; }
 
     private IEnumerable<int>? _pageItemsSource;
     /// <summary>
@@ -42,14 +41,14 @@ public partial class Table<TItem>
     [NotNull]
     public IEnumerable<int>? PageItemsSource
     {
-        get { return _pageItemsSource ?? new int[] { 20, 50, 100, 200, 500, 1000 }; }
+        get
+        {
+            return _pageItemsSource ?? new int[] { 20, 50, 100, 200, 500, 1000 };
+        }
         set
         {
-            if ((value == null && _pageItemsSource != null) || (value != null && !PageItemsSource.SequenceEqual(value)))
-            {
-                _pageItemsSource = value;
-                PageItemsSourceChanged = true;
-            }
+            _pageItemsSource = value;
+            PageItems = _pageItemsSource?.FirstOrDefault() ?? 20;
         }
     }
 

@@ -124,6 +124,8 @@ public partial class AutoComplete
         PlaceHolder ??= Localizer[nameof(PlaceHolder)];
         Items ??= Enumerable.Empty<string>();
         FilterItems ??= new List<string>();
+
+        SkipRegisterEnterEscJSInvoke = true;
     }
 
     /// <summary>
@@ -196,11 +198,11 @@ public partial class AutoComplete
             IsLoading = false;
         }
 
+        IsShown = true;
+
         var source = FilterItems;
         if (source.Any())
         {
-            IsShown = true;
-
             // 键盘向上选择
             if (args.Key == "ArrowUp")
             {

@@ -197,7 +197,7 @@ public class ValidateTest : BootstrapBlazorTestBase
     private string? Test { get; set; }
 
     [Fact]
-    public void IsRequired_Ok()
+    public async Task IsRequired_Ok()
     {
         // 组件绑定非公开模型属性
         Test = "test";
@@ -221,7 +221,7 @@ public class ValidateTest : BootstrapBlazorTestBase
         Assert.Contains("required", input.Markup);
 
         // 更改值测试
-        input.Find("input").Change("test1");
+        await cut.InvokeAsync(() => input.Find("input").Change("test1"));
         Assert.Equal(Test, input.Instance.Value);
         Assert.Equal("test1", input.Instance.Value);
 
@@ -254,7 +254,7 @@ public class ValidateTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void SetLabel_Ok()
+    public async Task SetLabel_Ok()
     {
         var cut = Context.RenderComponent<BootstrapInput<string>>(builder =>
         {
@@ -262,7 +262,7 @@ public class ValidateTest : BootstrapBlazorTestBase
             builder.Add(a => a.ShowLabel, true);
         });
         Assert.Equal("test", cut.Instance.DisplayText);
-        cut.InvokeAsync(() => cut.Instance.SetLabel("test1"));
+        await cut.InvokeAsync(() => cut.Instance.SetLabel("test1"));
         Assert.Equal("test1", cut.Instance.DisplayText);
     }
 

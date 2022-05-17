@@ -5,23 +5,22 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
+using System.Globalization;
 
 namespace BootstrapBlazor.Components;
 
 /// <summary>
 /// Editor 组件基类
 /// </summary>
-public partial class Editor : IDisposable
+public partial class Editor : IAsyncDisposable
 {
     /// <summary>
     /// 获得/设置 组件 DOM 实例
     /// </summary>
     private ElementReference EditorElement { get; set; }
 
-    /// <summary>
-    /// 获得/设置 JSInterop 实例
-    /// </summary>
-    private JSInterop<Editor>? Interope { get; set; }
+    [NotNull]
+    private JSModule<Editor>? Module { get; set; }
 
     /// <summary>
     /// 获得 Editor 样式
@@ -87,6 +86,12 @@ public partial class Editor : IDisposable
     }
 
     /// <summary>
+    /// 获得/设置 语言，默认为 null 自动判断，内置中英文额外语言包需要自行引入语言包
+    /// </summary>
+    [Parameter]
+    public string? Language { get; set; }
+
+    /// <summary>
     /// 获得/设置 组件值变化后的回调委托
     /// </summary>
     [Parameter]
@@ -107,7 +112,7 @@ public partial class Editor : IDisposable
     /// <summary>
     /// 执行editor的方法
     /// </summary>
-    public ValueTask DoMethodAysnc(string method, params object[] value) => JSRuntime.InvokeVoidAsync(EditorElement, "bb_editor_method", method, value);
+    public ValueTask DoMethodAysnc(string method, params object[] value) => Module.InvokeVoidAsync("bb_editor_method", EditorElement, method, value);
 
     /// <summary>
     /// OnInitialized 方法
@@ -133,6 +138,19 @@ public partial class Editor : IDisposable
     }
 
     /// <summary>
+    /// OnParametersSet
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (string.IsNullOrEmpty(Language))
+        {
+            Language = CultureInfo.CurrentUICulture.Name;
+        }
+    }
+
+    /// <summary>
     /// OnAfterRenderAsync 方法
     /// </summary>
     /// <param name="firstRender"></param>
@@ -143,7 +161,6 @@ public partial class Editor : IDisposable
 
         if (firstRender)
         {
-            Interope = new JSInterop<Editor>(JSRuntime);
             var methodGetPluginAttrs = "";
             var methodClickPluginItem = "";
             if (CustomerToolbarButtons.Any())
@@ -151,12 +168,14 @@ public partial class Editor : IDisposable
                 methodGetPluginAttrs = nameof(GetPluginAttrs);
                 methodClickPluginItem = nameof(ClickPluginItem);
             }
-            await Interope.InvokeVoidAsync(this, EditorElement, "bb_editor", methodGetPluginAttrs, methodClickPluginItem, nameof(Update), Height, Value ?? "");
+
+            Module = await JSRuntime.LoadModule<Editor>("./_content/BootstrapBlazor.SummerNote/js/bootstrap.blazor.editor.min.js", this, false);
+            await Module.InvokeVoidAsync("bb_editor", EditorElement, methodGetPluginAttrs, methodClickPluginItem, nameof(Update), Height, Value ?? "", Language);
         }
         else if (_renderValue)
         {
             _renderValue = false;
-            await JSRuntime.InvokeVoidAsync(EditorElement, "bb_editor", "code", "", "", "", Height, Value ?? "");
+            await Module.InvokeVoidAsync("bb_editor_code", EditorElement, Value ?? "");
         }
     }
 
@@ -231,14 +250,13 @@ public partial class Editor : IDisposable
     /// Dispose 方法
     /// </summary>
     /// <param name="disposing"></param>
-    protected virtual void Dispose(bool disposing)
+    protected virtual async ValueTask DisposeAsync(bool disposing)
     {
         if (disposing)
         {
-            if (Interope != null)
+            if (Module != null)
             {
-                Interope.Dispose();
-                Interope = null;
+                await Module.DisposeAsync();
             }
         }
     }
@@ -246,9 +264,9 @@ public partial class Editor : IDisposable
     /// <summary>
     /// Dispose 方法
     /// </summary>
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(disposing: true);
+        await DisposeAsync(true);
         GC.SuppressFinalize(this);
     }
 }
