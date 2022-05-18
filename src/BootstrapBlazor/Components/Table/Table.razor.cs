@@ -484,12 +484,6 @@ public partial class Table<TItem> : BootstrapComponentBase, IDisposable, ITable 
     public IEnumerable<TItem>? Items { get; set; }
 
     /// <summary>
-    /// 获得/设置 数据集合回调方法
-    /// </summary>
-    [Parameter]
-    public EventCallback<IEnumerable<TItem>> ItemsChanged { get; set; }
-
-    /// <summary>
     /// 获得/设置 表格组件大小 默认为 Normal 正常模式
     /// </summary>
     [Parameter]
@@ -1082,13 +1076,10 @@ public partial class Table<TItem> : BootstrapComponentBase, IDisposable, ITable 
 
         void SetEditTemplate()
         {
-            if (CanSave)
-            {
-                var onValueChanged = Utility.CreateOnValueChanged<TItem>(col.PropertyType).Compile();
-                var parameters = col.ComponentParameters?.ToList() ?? new List<KeyValuePair<string, object>>();
-                parameters.Add(new(nameof(ValidateBase<string>.OnValueChanged), onValueChanged.Invoke(item, col, (model, column, val) => InternalOnSaveAsync(model, ItemChangedType.Update))));
-                col.ComponentParameters = parameters;
-            }
+            var onValueChanged = Utility.CreateOnValueChanged<TItem>(col.PropertyType).Compile();
+            var parameters = col.ComponentParameters?.ToList() ?? new List<KeyValuePair<string, object>>();
+            parameters.Add(new(nameof(ValidateBase<string>.OnValueChanged), onValueChanged.Invoke(item, col, (model, column, val) => InternalOnSaveAsync(model, ItemChangedType.Update))));
+            col.ComponentParameters = parameters;
         }
     }
 

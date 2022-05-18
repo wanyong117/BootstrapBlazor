@@ -175,6 +175,27 @@ public partial class Table<TItem>
     public string? EditDialogCloseButtonText { get; set; }
 
     /// <summary>
+    /// 获得/设置 导出数据弹窗 Title 默认为资源文件 导出数据
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public string? ExportToastTitle { get; set; }
+
+    /// <summary>
+    /// 获得/设置 导出数据提示内容 默认为资源文件
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public string? ExportToastContent { get; set; }
+
+    /// <summary>
+    /// 获得/设置 正在导出数据提示内容 默认为资源文件
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public string? ExportToastInProgressContent { get; set; }
+
+    /// <summary>
     /// ToastService 服务实例
     /// </summary>
     [Inject]
@@ -196,7 +217,7 @@ public partial class Table<TItem>
     /// 获得/设置 各列是否显示状态集合
     /// </summary>
     [NotNull]
-    private IEnumerable<ColumnVisibleItem>? ColumnVisibles { get; set; }
+    private List<ColumnVisibleItem>? ColumnVisibles { get; set; }
 
     private class ColumnVisibleItem
     {
@@ -209,8 +230,8 @@ public partial class Table<TItem>
     private IEnumerable<ITableColumn> GetColumns()
     {
         // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I2LBM8
-        var items = ColumnVisibles?.Where(i => i.Visible);
-        return Columns.Where(i => items?.Any(v => v.FieldName == i.GetFieldName()) ?? true);
+        var items = ColumnVisibles.Where(i => i.Visible);
+        return Columns.Where(i => items.Any(v => v.FieldName == i.GetFieldName()));
     }
 
     private bool GetColumnsListState(ITableColumn col)
@@ -233,24 +254,9 @@ public partial class Table<TItem>
         {
             await AddDynamicOjbectExcelModelAsync();
         }
-        else if (IsTracking || CanSave)
-        {
-            await AddItemAsync();
-        }
         else
         {
-            await ShowAddToastAsync(SaveButtonToastContent);
-        }
-
-        async Task ShowAddToastAsync(string content)
-        {
-            var option = new ToastOption
-            {
-                Category = ToastCategory.Error,
-                Title = AddButtonToastTitle,
-                Content = content
-            };
-            await Toast.Show(option);
+            await AddItemAsync();
         }
 
         async Task AddItemAsync()
@@ -274,16 +280,14 @@ public partial class Table<TItem>
             {
                 ShowAddForm = true;
                 ShowEditForm = false;
-
-                await UpdateAsync();
+                StateHasChanged();
             }
             else if (EditMode == EditMode.InCell)
             {
                 AddInCell = true;
                 EditInCell = true;
                 SelectedRows.Add(EditModel);
-
-                await UpdateAsync();
+                StateHasChanged();
             }
             await OnSelectedRowsChanged();
             await ToggleLoading(false);
@@ -316,60 +320,52 @@ public partial class Table<TItem>
     /// </summary>
     public async Task EditAsync()
     {
-        if (IsTracking || CanSave || DynamicContext != null)
+        if (SelectedRows.Count == 1)
         {
-            if (SelectedRows.Count == 1)
+            // 检查是否选中了不可编辑行（行内无编辑按钮）
+            if (ShowEditButtonCallback != null && !ShowEditButtonCallback(SelectedRows[0]))
             {
-                // 检查是否选中了不可编辑行（行内无编辑按钮）
-                if (ShowEditButtonCallback != null && !ShowEditButtonCallback(SelectedRows[0]))
-                {
-                    // 提示不可编辑
-                    await ShowToastAsync(ToastCategory.Information, EditButtonToastReadonlyContent);
-                }
-                else
-                {
-                    await ToggleLoading(true);
-                    await InternalOnEditAsync();
-                    EditModalTitleString = EditModalTitle;
-
-                    // 显示编辑框
-                    if (EditMode == EditMode.Popup)
-                    {
-                        await ShowEditDialog(ItemChangedType.Update);
-                    }
-                    else if (EditMode == EditMode.EditForm)
-                    {
-                        ShowEditForm = true;
-                        ShowAddForm = false;
-                        await UpdateAsync();
-
-                    }
-                    else if (EditMode == EditMode.InCell)
-                    {
-                        AddInCell = false;
-                        EditInCell = true;
-                        await UpdateAsync();
-
-                    }
-                    await ToggleLoading(false);
-                }
+                // 提示不可编辑
+                await ShowToastAsync(EditButtonToastReadonlyContent);
             }
             else
             {
-                var content = SelectedRows.Count == 0 ? EditButtonToastNotSelectContent : EditButtonToastMoreSelectContent;
-                await ShowToastAsync(ToastCategory.Information, content);
+                await ToggleLoading(true);
+                await InternalOnEditAsync();
+                EditModalTitleString = EditModalTitle;
+
+                // 显示编辑框
+                if (EditMode == EditMode.Popup)
+                {
+                    await ShowEditDialog(ItemChangedType.Update);
+                }
+                else if (EditMode == EditMode.EditForm)
+                {
+                    ShowEditForm = true;
+                    ShowAddForm = false;
+                    StateHasChanged();
+
+                }
+                else if (EditMode == EditMode.InCell)
+                {
+                    AddInCell = false;
+                    EditInCell = true;
+                    StateHasChanged();
+                }
+                await ToggleLoading(false);
             }
         }
         else
         {
-            await ShowToastAsync(ToastCategory.Error, EditButtonToastNoSaveMethodContent);
+            var content = SelectedRows.Count == 0 ? EditButtonToastNotSelectContent : EditButtonToastMoreSelectContent;
+            await ShowToastAsync(content);
         }
 
-        async Task ShowToastAsync(ToastCategory category, string content)
+        async Task ShowToastAsync(string content)
         {
             var option = new ToastOption
             {
-                Category = category,
+                Category = ToastCategory.Information,
                 Title = EditButtonToastTitle,
                 Content = content
             };
@@ -404,29 +400,12 @@ public partial class Table<TItem>
     /// <returns></returns>
     protected async Task<bool> SaveModelAsync(EditContext context, ItemChangedType changedType)
     {
-        bool valid;
-        if (DynamicContext != null)
+        bool valid = await InternalOnSaveAsync((TItem)context.Model, changedType);
+
+        // 回调外部自定义方法
+        if (OnAfterSaveAsync != null)
         {
-            await DynamicContext.SetValue(context.Model);
-
-            // 回调外部自定义方法
-            if (OnAfterSaveAsync != null)
-            {
-                await OnAfterSaveAsync((TItem)context.Model);
-            }
-
-            RowItemsCache = null;
-            valid = true;
-        }
-        else
-        {
-            valid = await InternalOnSaveAsync((TItem)context.Model, changedType);
-
-            // 回调外部自定义方法
-            if (OnAfterSaveAsync != null)
-            {
-                await OnAfterSaveAsync((TItem)context.Model);
-            }
+            await OnAfterSaveAsync((TItem)context.Model);
         }
 
         if (ShowToastAfterSaveOrDeleteModel)
@@ -449,45 +428,28 @@ public partial class Table<TItem>
     /// <param name="changedType"></param>
     protected async Task SaveAsync(EditContext context, ItemChangedType changedType)
     {
-        if (DynamicContext != null || CanSave)
+        await ToggleLoading(true);
+        if (await SaveModelAsync(context, changedType))
         {
-            await ToggleLoading(true);
-            if (await SaveModelAsync(context, changedType))
+            if (EditMode == EditMode.EditForm)
             {
-                if (EditMode == EditMode.Popup)
+                if (ShowAddForm)
                 {
-                    await QueryAsync();
+                    await QueryData();
+                    ShowAddForm = false;
                 }
-                else if (EditMode == EditMode.EditForm)
-                {
-                    if (ShowAddForm)
-                    {
-                        await QueryData();
-                        ShowAddForm = false;
-                    }
-                    ShowEditForm = false;
-                    StateHasChanged();
-                }
-                else if (EditMode == EditMode.InCell)
-                {
-                    SelectedRows.Clear();
-                    EditInCell = false;
-                    AddInCell = false;
-                    await QueryAsync();
-                }
+                ShowEditForm = false;
+                StateHasChanged();
             }
-            await ToggleLoading(false);
-        }
-        else
-        {
-            var option = new ToastOption
+            else if (EditMode == EditMode.InCell)
             {
-                Category = ToastCategory.Error,
-                Title = SaveButtonToastTitle,
-                Content = SaveButtonToastContent
-            };
-            await Toast.Show(option);
+                SelectedRows.Clear();
+                EditInCell = false;
+                AddInCell = false;
+                await QueryAsync();
+            }
         }
+        await ToggleLoading(false);
     }
 
     /// <summary>
@@ -519,6 +481,7 @@ public partial class Table<TItem>
     /// </summary>
     protected async Task ShowEditDialog(ItemChangedType changedType)
     {
+        var saved = false;
         var option = new EditDialogOption<TItem>()
         {
             Class = "modal-dialog-table",
@@ -542,41 +505,32 @@ public partial class Table<TItem>
             ShowUnsetGroupItemsOnTop = ShowUnsetGroupItemsOnTop,
             OnCloseAsync = async () =>
             {
-                var d = DataService ?? InjectDataService;
-                if (d is IEntityFrameworkCoreDataService ef)
+                if (!saved)
                 {
-                    // EFCore
-                    await ToggleLoading(true);
-                    await ef.CancelAsync();
-                    await ToggleLoading(false);
+                    // EFCore 模式保存失败后调用 CancelAsync 回调
+                    var d = DataService ?? InjectDataService;
+                    if (d is IEntityFrameworkCoreDataService ef)
+                    {
+                        // EFCore
+                        await ToggleLoading(true);
+                        await ef.CancelAsync();
+                        await ToggleLoading(false);
+                    }
                 }
-                await UpdateAsync();
             },
             OnEditAsync = async context =>
             {
                 await ToggleLoading(true);
-                var valid = await SaveModelAsync(context, changedType);
-                if (valid)
+                saved = await SaveModelAsync(context, changedType);
+                if (saved)
                 {
                     await QueryAsync();
                 }
                 await ToggleLoading(false);
-                return valid;
+                return saved;
             }
         };
         await DialogService.ShowEditDialog(option);
-    }
-
-    private async Task UpdateAsync()
-    {
-        if (ItemsChanged.HasDelegate)
-        {
-            await ItemsChanged.InvokeAsync(RowItems);
-        }
-        else
-        {
-            StateHasChanged();
-        }
     }
 
     /// <summary>
@@ -627,14 +581,14 @@ public partial class Table<TItem>
         {
             RowItems.RemoveAll(i => SelectedRows.Contains(i));
             SelectedRows.Clear();
-            await UpdateAsync();
+            StateHasChanged();
         }
         else
         {
             await ToggleLoading(true);
             var ret = await DelteItemsAsync();
 
-            if (ret && ShowToastAfterSaveOrDeleteModel && !IsTracking)
+            if (ShowToastAfterSaveOrDeleteModel)
             {
                 var option = new ToastOption()
                 {
@@ -642,7 +596,6 @@ public partial class Table<TItem>
                     Category = ret ? ToastCategory.Success : ToastCategory.Error
                 };
                 option.Content = string.Format(DeleteButtonToastResultContent, ret ? SuccessText : FailText, Math.Ceiling(option.Delay / 1000.0));
-
                 await Toast.Show(option);
             }
             await ToggleLoading(false);
@@ -653,13 +606,16 @@ public partial class Table<TItem>
             var ret = await InternalOnDeleteAsync();
             if (ret)
             {
-                // 删除成功 重新查询
-                // 由于数据删除导致页码会改变，尤其是最后一页
-                // 重新计算页码
-                // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I1UJSL
-                PageIndex = Math.Max(1, Math.Min(PageIndex, int.Parse(Math.Ceiling((TotalCount - SelectedRows.Count) * 1d / PageItems).ToString())));
-                var items = PageItemsSource.Where(item => item >= (TotalCount - SelectedRows.Count));
-                PageItems = Math.Min(PageItems, items.Any() ? items.Min() : PageItems);
+                if (IsPagination)
+                {
+                    // 删除成功 重新查询
+                    // 由于数据删除导致页码会改变，尤其是最后一页
+                    // 重新计算页码
+                    // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I1UJSL
+                    PageIndex = Math.Max(1, Math.Min(PageIndex, int.Parse(Math.Ceiling((TotalCount - SelectedRows.Count) * 1d / PageItems).ToString())));
+                    var items = PageItemsSource.Where(item => item >= (TotalCount - SelectedRows.Count));
+                    PageItems = Math.Min(PageItems, items.Any() ? items.Min() : PageItems);
+                }
                 SelectedRows.Clear();
                 await QueryAsync();
             }
@@ -676,11 +632,8 @@ public partial class Table<TItem>
             }
             else
             {
-                if (CanDelete)
-                {
-                    await InternalOnDeleteAsync();
-                    await QueryAsync();
-                }
+                await InternalOnDeleteAsync();
+                await QueryAsync();
             }
         }
     }
@@ -702,68 +655,38 @@ public partial class Table<TItem>
     }
 
     /// <summary>
-    /// 确认导出按钮方法
-    /// </summary>
-    protected async Task<bool> ConfirmExport()
-    {
-        var ret = false;
-        if (!RowItems.Any())
-        {
-            var option = new ToastOption
-            {
-                Category = ToastCategory.Information,
-                Title = "导出数据"
-            };
-            option.Content = $"没有需要导出的数据, {Math.Ceiling(option.Delay / 1000.0)} 秒后自动关闭";
-            await Toast.Show(option);
-        }
-        else
-        {
-            ret = true;
-        }
-        return ret;
-    }
-
-    /// <summary>
     /// 导出数据方法
     /// </summary>
     protected async Task ExportAsync()
     {
-        var ret = false;
-
-        _ = Task.Run(async () =>
+        var option = new ToastOption
         {
-            if (OnExportAsync != null)
-            {
-                ret = await OnExportAsync(RowItems);
-            }
-            else
-            {
-                // 如果未提供 OnExportAsync 回调委托使用注入服务来尝试解析
-                // TODO: 这里将本页数据作为参数传递给导出服务，服务本身可以利用自身优势获取全部所需数据，如果获取全部数据呢？
-                ret = await ExcelExport.ExportAsync(RowItems, Columns, JSRuntime);
-            }
-
-            var option = new ToastOption()
-            {
-                Title = "导出数据"
-            };
-            option.Category = ret ? ToastCategory.Success : ToastCategory.Error;
-            option.Content = $"导出数据{(ret ? "成功" : "失败")}, {Math.Ceiling(option.Delay / 1000.0)} 秒后自动关闭";
-
-            await Toast.Show(option);
-        });
-
-        var option = new ToastOption()
-        {
-            Title = "导出数据"
+            Title = ExportToastTitle,
+            Category = ToastCategory.Information
         };
-        option.Category = ToastCategory.Information;
-        option.Content = $"正在导出数据，请稍候, {Math.Ceiling(option.Delay / 1000.0)} 秒后自动关闭";
-
+        option.Content = string.Format(ExportToastInProgressContent, Math.Ceiling(option.Delay / 1000.0));
         await Toast.Show(option);
 
-        await Task.CompletedTask;
+        var ret = false;
+        if (OnExportAsync != null)
+        {
+            ret = await OnExportAsync(RowItems);
+        }
+        else
+        {
+            // 如果未提供 OnExportAsync 回调委托使用注入服务来尝试解析
+            // TODO: 这里将本页数据作为参数传递给导出服务，服务本身可以利用自身优势获取全部所需数据，如果获取全部数据呢？
+            ret = await ExcelExport.ExportAsync(RowItems, Columns, JSRuntime);
+        }
+
+        option = new ToastOption
+        {
+            Title = ExportToastTitle,
+            Category = ret ? ToastCategory.Success : ToastCategory.Error
+        };
+        //$"导出数据{(ret ? "成功" : "失败")}, {Math.Ceiling(option.Delay / 1000.0)} 秒后自动关闭";
+        option.Content = string.Format(ExportToastContent, ret ? SuccessText : FailText, Math.Ceiling(option.Delay / 1000.0));
+        await Toast.Show(option);
     }
 
     /// <summary>
