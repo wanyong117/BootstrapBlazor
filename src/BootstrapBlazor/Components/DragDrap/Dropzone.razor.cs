@@ -245,7 +245,6 @@ public partial class Dropzone<TItem> : IDisposable
 
     private void OnDragLeave()
     {
-        DragDropService.DragTargetItem = default;
         StateHasChanged();
     }
 
@@ -253,7 +252,6 @@ public partial class Dropzone<TItem> : IDisposable
     {
         if (!IsDropAllowed())
         {
-            DragDropService.Reset();
             return;
         }
 

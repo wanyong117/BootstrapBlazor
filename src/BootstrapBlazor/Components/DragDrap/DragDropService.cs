@@ -26,11 +26,6 @@ internal class DragDropService<T>
     public List<T>? Items { get; set; }
 
     /// <summary>
-    /// 活动的Id
-    /// </summary>
-    public int? ActiveSpacerId { get; set; }
-
-    /// <summary>
     /// 之前的位置
     /// </summary>
     public int? OldIndex { get; set; }
@@ -39,26 +34,4 @@ internal class DragDropService<T>
     /// 通知刷新
     /// </summary>
     public EventHandler? StateHasChanged { get; set; }
-
-    public void Reset()
-    {
-        if (OldIndex is >= 0 && Items != null && ActiveItem != null)
-        {
-            Items.Insert(OldIndex.Value, ActiveItem);
-        }
-        Commit();
-    }
-
-    public void Commit()
-    {
-        ActiveItem = default;
-        ActiveSpacerId = null;
-        Items = null;
-        DragTargetItem = default;
-
-        if (StateHasChanged != null)
-        {
-            StateHasChanged.Invoke(this, EventArgs.Empty);
-        }
-    }
 }
