@@ -230,13 +230,8 @@ public partial class Table<TItem>
     private IEnumerable<ITableColumn> GetColumns()
     {
         // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I2LBM8
-        IEnumerable<ITableColumn> cols = Columns;
-        if (ColumnVisibles != null)
-        {
-            var items = ColumnVisibles.Where(i => i.Visible);
-            cols = Columns.Where(i => items.Any(v => v.FieldName == i.GetFieldName()));
-        }
-        return cols;
+        var items = ColumnVisibles?.Where(i => i.Visible);
+        return items == null ? Columns : Columns.Where(i => items.Any(v => v.FieldName == i.GetFieldName()));
     }
 
     private bool GetColumnsListState(ITableColumn col)
