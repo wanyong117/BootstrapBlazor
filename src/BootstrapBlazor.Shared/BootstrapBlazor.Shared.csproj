@@ -10,17 +10,23 @@
     <Content Remove="Locales\*.json" />
     <EmbeddedResource Include="Locales\*.json" />
     <Content Remove="docs.json" />
+    <Content Remove="links.json" />
+    <Content Remove="topology.json" />
     <EmbeddedResource Include="docs.json" />
+    <EmbeddedResource Include="links.json" />
+    <EmbeddedResource Include="topology.json" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BootstrapBlazor.BaiduSpeech" Version="6.*" />
     <PackageReference Include="BootstrapBlazor.Chart" Version="6.*" />
+    <PackageReference Include="BootstrapBlazor.CherryMarkdown" Version="6.*" />
     <PackageReference Include="BootstrapBlazor.Markdown" Version="6.*" />
+    <PackageReference Include="BootstrapBlazor.OnScreenKeyboard" Version="6.*" />
     <PackageReference Include="BootstrapBlazor.SignaturePad" Version="6.*" />
     <PackageReference Include="BootstrapBlazor.SummerNote" Version="6.*" />
     <PackageReference Include="BootstrapBlazor.TableExport" Version="6.*" />
-    <PackageReference Include="BootstrapBlazor.OnScreenKeyboard" Version="6.*" />
+    <PackageReference Include="BootstrapBlazor.Topology" Version="6.*" />
   </ItemGroup>
 
   <ItemGroup>
