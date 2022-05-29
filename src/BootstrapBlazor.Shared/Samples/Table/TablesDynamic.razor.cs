@@ -28,9 +28,15 @@ public partial class TablesDynamic
     [NotNull]
     private IStringLocalizer<Tables>? TablesLocalizer { get; set; }
 
+    [Inject]
+    [NotNull]
+    private IStringLocalizer<TablesDynamic>? DynamicLocalizer { get; set; }
+
     private string? ButtonAddColumnText { get; set; }
 
     private string? ButtonRemoveColumnText { get; set; }
+
+    private List<DynamicObject> SelectedItems { get; set; } = new List<DynamicObject>();
 
     /// <summary>
     /// OnInitialized 方法

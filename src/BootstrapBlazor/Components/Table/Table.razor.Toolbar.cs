@@ -230,8 +230,13 @@ public partial class Table<TItem>
     private IEnumerable<ITableColumn> GetColumns()
     {
         // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I2LBM8
-        var items = ColumnVisibles.Where(i => i.Visible);
-        return Columns.Where(i => items.Any(v => v.FieldName == i.GetFieldName()));
+        IEnumerable<ITableColumn> cols = Columns;
+        if (ColumnVisibles != null)
+        {
+            var items = ColumnVisibles.Where(i => i.Visible);
+            cols = Columns.Where(i => items.Any(v => v.FieldName == i.GetFieldName()));
+        }
+        return cols;
     }
 
     private bool GetColumnsListState(ITableColumn col)
@@ -300,6 +305,7 @@ public partial class Table<TItem>
                 // 数据源为 DataTable 新建后重建行与列
                 await DynamicContext.AddAsync(SelectedRows.OfType<IDynamicObject>());
                 ResetDynamicContext();
+                SelectedRows.Clear();
                 StateHasChanged();
             }
             else
@@ -400,14 +406,23 @@ public partial class Table<TItem>
     /// <returns></returns>
     protected async Task<bool> SaveModelAsync(EditContext context, ItemChangedType changedType)
     {
-        bool valid = await InternalOnSaveAsync((TItem)context.Model, changedType);
+        bool valid;
+        if (DynamicContext != null)
+        {
+            await DynamicContext.SetValue(context.Model);
+            RowItemsCache = null;
+            valid = true;
+        }
+        else
+        {
+            valid = await InternalOnSaveAsync((TItem)context.Model, changedType);
+        }
 
         // 回调外部自定义方法
         if (OnAfterSaveAsync != null)
         {
             await OnAfterSaveAsync((TItem)context.Model);
         }
-
         if (ShowToastAfterSaveOrDeleteModel)
         {
             var option = new ToastOption
@@ -628,6 +643,7 @@ public partial class Table<TItem>
             {
                 await DynamicContext.DeleteAsync(SelectedRows.AsEnumerable().OfType<IDynamicObject>());
                 ResetDynamicContext();
+                SelectedRows.Clear();
                 StateHasChanged();
             }
             else
@@ -649,7 +665,6 @@ public partial class Table<TItem>
             Columns.AddRange(cols);
 
             QueryItems = DynamicContext.GetItems().Cast<TItem>();
-            SelectedRows.Clear();
             RowItemsCache = null;
         }
     }
