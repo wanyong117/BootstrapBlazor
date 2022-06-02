@@ -110,6 +110,13 @@ public class LambadaExtensionsTest
         Assert.True(invoker.Invoke(new Foo() { Name = "Name" }));
     }
 
+    [Fact]
+    public void FilterKeyValueAction_SimpleFilterExpression_Exception()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Name", FieldValue = "Name" };
+        Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Dummy>());
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
