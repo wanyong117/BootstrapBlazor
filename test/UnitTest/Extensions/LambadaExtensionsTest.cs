@@ -39,6 +39,15 @@ public class LambadaExtensionsTest
         var exp = filters.GetFilterLambda<Foo>();
         Assert.True(exp.Compile().Invoke(new Foo() { DateTime = DateTime.MinValue }));
     }
+
+    [Fact]
+    public void GetFilterLambda_Enum()
+    {
+        var filters = new FilterKeyValueAction() { FieldKey = nameof(Dummy.Education), FieldValue = "Middel" };
+        var exp = filters.GetFilterLambda<Dummy>();
+        Assert.True(exp.Compile().Invoke(new Dummy() { Education = EnumEducation.Middel }));
+    }
+
     [Fact]
     public void GetFilterLambda_Null()
     {
