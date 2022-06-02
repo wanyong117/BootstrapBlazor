@@ -101,6 +101,15 @@ public class LambadaExtensionsTest
         var invoker = filter.GetFilterLambda<Foo>().Compile();
         Assert.True(invoker.Invoke(new Foo()));
     }
+
+    [Fact]
+    public void FilterKeyValueAction_SimpleFilterExpression()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Name", FieldValue = "Name" };
+        var invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(new Foo() { Name = "Name" }));
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
