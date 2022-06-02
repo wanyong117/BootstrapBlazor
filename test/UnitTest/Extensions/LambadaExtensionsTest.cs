@@ -31,6 +31,14 @@ public class LambadaExtensionsTest
         var invoker = filter.GetFilterFunc<Foo>();
         Assert.True(invoker(new Foo()));
     }
+
+    [Fact]
+    public void GetFilterLambda_Nullable()
+    {
+        var filters = new FilterKeyValueAction() { FieldKey = nameof(Foo.DateTime), FieldValue = DateTime.MinValue };
+        var exp = filters.GetFilterLambda<Foo>();
+        Assert.True(exp.Compile().Invoke(new Foo() { DateTime = DateTime.MinValue }));
+    }
     [Fact]
     public void GetFilterLambda_Null()
     {
