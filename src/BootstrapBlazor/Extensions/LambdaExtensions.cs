@@ -47,26 +47,29 @@ public static class LambdaExtensions
     public static Expression<Func<TItem, bool>> GetFilterLambda<TItem>(this IEnumerable<FilterKeyValueAction> filters)
     {
         Expression<Func<TItem, bool>>? ret = null;
-        var exp_p = Expression.Parameter(typeof(TItem));
-        var visitor = new ComboExpressionVisitor(exp_p);
-
-        foreach (var filter in filters)
+        if (filters.Any())
         {
-            var exp = filter.GetFilterLambda<TItem>();
-            if (ret == null)
+            var exp_p = Expression.Parameter(typeof(TItem));
+            var visitor = new ComboExpressionVisitor(exp_p);
+
+            foreach (var filter in filters)
             {
-                ret = exp;
-                continue;
+                var exp = filter.GetFilterLambda<TItem>();
+                if (ret == null)
+                {
+                    ret = exp;
+                    continue;
+                }
+
+                var left = visitor.Visit(ret.Body);
+                var right = visitor.Visit(exp.Body);
+
+                ret = filter.FilterLogic switch
+                {
+                    FilterLogic.And => Expression.Lambda<Func<TItem, bool>>(Expression.AndAlso(left, right), exp_p),
+                    _ => Expression.Lambda<Func<TItem, bool>>(Expression.OrElse(left, right), exp_p),
+                };
             }
-
-            var left = visitor.Visit(ret.Body);
-            var right = visitor.Visit(exp.Body);
-
-            ret = filter.FilterLogic switch
-            {
-                FilterLogic.And => Expression.Lambda<Func<TItem, bool>>(Expression.AndAlso(left, right), exp_p),
-                _ => Expression.Lambda<Func<TItem, bool>>(Expression.OrElse(left, right), exp_p),
-            };
         }
         return ret ?? (r => true);
     }
@@ -81,22 +84,25 @@ public static class LambdaExtensions
     private static Expression<Func<TItem, bool>> ExpressionAndLambda<TItem>(this IEnumerable<Expression<Func<TItem, bool>>> expressions, FilterLogic logic = FilterLogic.And)
     {
         Expression<Func<TItem, bool>>? ret = null;
-        var exp_p = Expression.Parameter(typeof(TItem));
-        var visitor = new ComboExpressionVisitor(exp_p);
-
-        foreach (var exp in expressions)
+        if (expressions.Any())
         {
-            if (ret == null)
-            {
-                ret = exp;
-                continue;
-            }
+            var exp_p = Expression.Parameter(typeof(TItem));
+            var visitor = new ComboExpressionVisitor(exp_p);
 
-            var left = visitor.Visit(ret.Body);
-            var right = visitor.Visit(exp.Body);
-            ret = logic == FilterLogic.And
-                ? Expression.Lambda<Func<TItem, bool>>(Expression.AndAlso(left, right), exp_p)
-                : Expression.Lambda<Func<TItem, bool>>(Expression.OrElse(left, right), exp_p);
+            foreach (var exp in expressions)
+            {
+                if (ret == null)
+                {
+                    ret = exp;
+                    continue;
+                }
+
+                var left = visitor.Visit(ret.Body);
+                var right = visitor.Visit(exp.Body);
+                ret = logic == FilterLogic.And
+                    ? Expression.Lambda<Func<TItem, bool>>(Expression.AndAlso(left, right), exp_p)
+                    : Expression.Lambda<Func<TItem, bool>>(Expression.OrElse(left, right), exp_p);
+            }
         }
         return ret ?? (r => true);
     }
