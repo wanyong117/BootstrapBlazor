@@ -125,6 +125,16 @@ public class LambadaExtensionsTest
         Assert.True(invoker.Invoke(new Dummy() { Foo = new Foo() { Name = "Name" } }));
     }
 
+    [Fact]
+    public void FilterKeyValueAction_ComplexFilterExpression_Exception()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Foo.TestName", FieldValue = "Name" };
+        Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Dummy>());
+
+        filter = new FilterKeyValueAction() { FieldKey = "Foo1.TestName", FieldValue = "Name" };
+        Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Dummy>());
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
@@ -221,5 +231,12 @@ public class LambadaExtensionsTest
             };
             return filters;
         }
+    }
+
+    private class Dummy
+    {
+        public Foo? Foo { get; set; }
+
+        public EnumEducation Education { get; set; }
     }
 }
