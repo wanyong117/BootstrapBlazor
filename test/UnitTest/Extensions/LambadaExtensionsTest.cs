@@ -51,6 +51,25 @@ public class LambadaExtensionsTest
         Assert.Single(items);
     }
 
+    [Fact]
+    public void GetFilterLambda_Or()
+    {
+        var foos = new Foo[]
+        {
+            new() { Count = 1 },
+            new() { Count = 2 },
+            new() { Count = 10 },
+            new() { Count = 11 }
+        };
+        var filter = new MockFilterActionBase[]
+        {
+            new MockOrFilterAction1(),
+            new MockOrFilterAction2()
+        };
+        var items = foos.Where(filter.GetFilterFunc<Foo>(FilterLogic.Or));
+        Assert.Equal(3, items.Count());
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
