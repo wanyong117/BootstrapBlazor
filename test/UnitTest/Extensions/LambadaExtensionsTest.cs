@@ -32,6 +32,24 @@ public class LambadaExtensionsTest
         Assert.True(exp.Compile().Invoke(new Foo()));
     }
 
+    [Fact]
+    public void GetFilterLambda_And()
+    {
+        var foos = new Foo[]
+        {
+            new() { Count = 1 },
+            new() { Count = 2 },
+            new() { Count = 10 },
+            new() { Count = 11 }
+        };
+        var filter = new MockFilterActionBase[]
+        {
+            new MockAndFilterAction1(),
+            new MockAndFilterAction2()
+        };
+        var items = foos.Where(filter.GetFilterFunc<Foo>());
+        Assert.Single(items);
+    }
 
     private abstract class MockFilterActionBase : IFilterAction
     {
