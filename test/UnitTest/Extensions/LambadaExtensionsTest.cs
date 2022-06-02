@@ -24,6 +24,14 @@ public class LambadaExtensionsTest
         Assert.Equal(4, items.Count());
     }
 
+    [Fact]
+    public void GetFilterLambda_Null()
+    {
+        var filters = Array.Empty<FilterKeyValueAction>();
+        var exp = filters.GetFilterLambda<Foo>();
+        Assert.True(exp.Compile().Invoke(new Foo()));
+    }
+
 
     private abstract class MockFilterActionBase : IFilterAction
     {
