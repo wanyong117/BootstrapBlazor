@@ -150,7 +150,7 @@ public static class LambdaExtensions
 
         Expression<Func<TItem, bool>> GetSimpleFilterExpression()
         {
-            var prop = typeof(TItem).GetPropertyByName(filter.FieldKey);
+            var prop = typeof(TItem).GetPropertyByName(filter.FieldKey) ?? throw new InvalidOperationException($"the model {type.Name} not found the property {filter.FieldKey}"); ;
             if (prop != null)
             {
                 var p = Expression.Parameter(type);
@@ -192,11 +192,6 @@ public static class LambdaExtensions
                     pInfo = pInfo.PropertyType.GetPropertyByName(name) ?? throw new InvalidOperationException($"the model {pInfo.PropertyType.Name} not found the property {name}");
                     fieldExpression = Expression.Property(fieldExpression, pInfo);
                 }
-            }
-
-            if (fieldExpression == null)
-            {
-                throw new InvalidOperationException();
             }
 
             // 可为空类型转化为具体类型
