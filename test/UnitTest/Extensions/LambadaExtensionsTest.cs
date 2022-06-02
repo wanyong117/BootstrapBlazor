@@ -25,6 +25,13 @@ public class LambadaExtensionsTest
     }
 
     [Fact]
+    public void GetFilterFunc_Ok()
+    {
+        var filter = new FilterKeyValueAction();
+        var invoker = filter.GetFilterFunc<Foo>();
+        Assert.True(invoker(new Foo()));
+    }
+    [Fact]
     public void GetFilterLambda_Null()
     {
         var filters = Array.Empty<FilterKeyValueAction>();
