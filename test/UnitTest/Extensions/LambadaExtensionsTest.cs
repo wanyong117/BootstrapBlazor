@@ -3,10 +3,11 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using BootstrapBlazor.Shared;
+using System.Linq.Expressions;
 
 namespace UnitTest.Extensions;
 
-public class LambadaExtensionsTest
+public class LambadaExtensionsTest : BootstrapBlazorTestBase
 {
     [Fact]
     public void GetFilterFunc_Null()
@@ -194,6 +195,24 @@ public class LambadaExtensionsTest
         Assert.True(invoker.Invoke(new Foo() { Name = "11" }));
     }
 
+    [Fact]
+    public void GetExpression_CustomPredicate()
+    {
+        var foo = new Foo() { Name = "11" };
+        var val = new Func<string, bool>(p1 => p1 == foo.Name);
+        var filter = new FilterKeyValueAction() { FieldKey = "Name", FieldValue = val, FilterAction = FilterAction.CustomPredicate };
+        var invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(foo));
+
+        // Expression
+        Expression<Func<string, bool>> p1 = p => p == foo.Name;
+        filter.FieldValue = p1;
+        invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(foo));
+
+        filter.FieldValue = new object();
+        Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Foo>());
+    }
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
