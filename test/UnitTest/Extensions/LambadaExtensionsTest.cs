@@ -213,6 +213,17 @@ public class LambadaExtensionsTest : BootstrapBlazorTestBase
         filter.FieldValue = new object();
         Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Foo>());
     }
+
+    [Fact]
+    public void ElementCount_Ok()
+    {
+        var p1 = new List<string>() { "1", "2" };
+        Assert.Equal(2, LambdaExtensions.ElementCount(p1));
+
+        var p2 = new string[] { "1", "2" };
+        Assert.Equal(2, LambdaExtensions.ElementCount(p2));
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
