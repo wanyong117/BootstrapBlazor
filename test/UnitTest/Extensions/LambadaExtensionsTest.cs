@@ -3,7 +3,6 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using BootstrapBlazor.Shared;
-using System.Linq;
 
 namespace UnitTest.Extensions;
 
@@ -133,6 +132,14 @@ public class LambadaExtensionsTest
 
         filter = new FilterKeyValueAction() { FieldKey = "Foo1.TestName", FieldValue = "Name" };
         Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Dummy>());
+    }
+
+    [Fact]
+    public void FilterKeyValueAction_ComplexFilterExpression_Nullable()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Foo.DateTime", FieldValue = DateTime.MinValue };
+        var invoker = filter.GetFilterLambda<Dummy>().Compile();
+        Assert.True(invoker.Invoke(new Dummy() { Foo = new Foo() { DateTime = DateTime.MinValue } }));
     }
 
     private abstract class MockFilterActionBase : IFilterAction
