@@ -177,6 +177,14 @@ public class LambadaExtensionsTest
         Assert.True(invoker.Invoke(new Foo() { Count = 10 }));
         Assert.False(invoker.Invoke(new Foo() { Count = 11 }));
     }
+
+    [Fact]
+    public void GetExpression_Contains()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Name", FieldValue = "test", FilterAction = FilterAction.Contains };
+        var invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(new Foo() { Name = "1test1" }));
+    }
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
