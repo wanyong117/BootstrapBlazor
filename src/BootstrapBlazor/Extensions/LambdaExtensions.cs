@@ -197,13 +197,13 @@ public static class LambdaExtensions
             // 可为空类型转化为具体类型
             if (pInfo!.PropertyType.IsGenericType && pInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                fieldExpression = Expression.Convert(fieldExpression, pInfo.PropertyType.GenericTypeArguments[0]);
+                fieldExpression = Expression.Convert(fieldExpression!, pInfo.PropertyType.GenericTypeArguments[0]);
             }
             else if (pInfo.PropertyType.IsEnum && filter.FieldValue is string)
             {
                 fieldExpression = Expression.Call(fieldExpression, pInfo.PropertyType.GetMethod("ToString", Array.Empty<Type>())!);
             }
-            fieldExpression = filter.GetExpression(fieldExpression);
+            fieldExpression = filter.GetExpression(fieldExpression!);
             return Expression.Lambda<Func<TItem, bool>>(fieldExpression, p);
         }
     }
