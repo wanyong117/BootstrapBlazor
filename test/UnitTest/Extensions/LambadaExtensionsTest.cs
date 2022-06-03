@@ -142,6 +142,13 @@ public class LambadaExtensionsTest
         Assert.True(invoker.Invoke(new Dummy() { Foo = new Foo() { DateTime = DateTime.MinValue } }));
     }
 
+    [Fact]
+    public void FilterKeyValueAction_ComplexFilterExpression_Enum()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Cat.Education", FieldValue = "Middel" };
+        var invoker = filter.GetFilterLambda<Dummy>().Compile();
+        Assert.True(invoker.Invoke(new Dummy() { Cat = new Cat() { Education = EnumEducation.Middel } }));
+    }
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
