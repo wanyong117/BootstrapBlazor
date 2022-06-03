@@ -149,6 +149,15 @@ public class LambadaExtensionsTest
         var invoker = filter.GetFilterLambda<Dummy>().Compile();
         Assert.True(invoker.Invoke(new Dummy() { Cat = new Cat() { Education = EnumEducation.Middel } }));
     }
+
+    [Fact]
+    public void GetExpression_NotEqual()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Count", FieldValue = 1, FilterAction = FilterAction.NotEqual };
+        var invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(new Foo() { Count = 2 }));
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
