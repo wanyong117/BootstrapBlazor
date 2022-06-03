@@ -229,13 +229,12 @@ public static class LambdaExtensions
             FilterAction.LessThanOrEqual => Expression.LessThanOrEqual(left, right),
             FilterAction.Contains => left.Contains(right),
             FilterAction.NotContains => Expression.Not(left.Contains(right)),
-            FilterAction.CustomPredicate => filter.FieldValue switch
+            _ => filter.FieldValue switch
             {
                 LambdaExpression t => Expression.Invoke(t, left),
                 Delegate _ => Expression.Invoke(right, left),
-                _ => throw new ArgumentException(nameof(FilterKeyValueAction.FieldValue))
+                _ => throw new InvalidOperationException(nameof(FilterKeyValueAction.FieldValue))
             },
-            _ => Expression.Empty()
         };
     }
 
