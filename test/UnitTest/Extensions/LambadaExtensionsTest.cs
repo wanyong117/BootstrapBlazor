@@ -167,6 +167,16 @@ public class LambadaExtensionsTest
         Assert.True(invoker.Invoke(new Foo() { Count = 10 }));
         Assert.True(invoker.Invoke(new Foo() { Count = 11 }));
     }
+
+    [Fact]
+    public void GetExpression_LessThanOrEqual()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Count", FieldValue = 10, FilterAction = FilterAction.LessThanOrEqual };
+        var invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(new Foo() { Count = 9 }));
+        Assert.True(invoker.Invoke(new Foo() { Count = 10 }));
+        Assert.False(invoker.Invoke(new Foo() { Count = 11 }));
+    }
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
