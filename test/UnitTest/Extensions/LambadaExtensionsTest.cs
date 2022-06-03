@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace UnitTest.Extensions;
 
-public class LambadaExtensionsTest : BootstrapBlazorTestBase
+public class LambadaExtensionsTest
 {
     [Fact]
     public void GetFilterFunc_Null()
@@ -212,47 +212,6 @@ public class LambadaExtensionsTest : BootstrapBlazorTestBase
 
         filter.FieldValue = new object();
         Assert.Throws<InvalidOperationException>(() => filter.GetFilterLambda<Foo>());
-    }
-
-    [Fact]
-    public void ElementCount_Ok()
-    {
-        var p1 = new List<string>() { "1", "2" };
-        Assert.Equal(2, LambdaExtensions.ElementCount(p1));
-
-        var p2 = new string[] { "1", "2" };
-        Assert.Equal(2, LambdaExtensions.ElementCount(p2));
-    }
-
-    [Fact]
-    public void GetSortFunc_Ok()
-    {
-        var p1 = Utility.GetSortFunc<Foo>();
-        var foos = new Foo[]
-        {
-            new() { Count = 2 },
-            new() { Count = 1 }
-        };
-        var sortedFoos = p1(foos, nameof(Foo.Count), SortOrder.Asc);
-        Assert.Equal(1, sortedFoos.First().Count);
-    }
-
-    [Fact]
-    public void GetSortListFunc_Ok()
-    {
-        var p1 = Utility.GetSortListFunc<Foo>();
-        var foos = new Foo[]
-        {
-            new() { Count = 2, Name = "1" },
-            new() { Count = 1, Name = "1" },
-            new() { Count = 4, Name = "2" },
-            new() { Count = 3, Name = "2" }
-        };
-        var sortedFoos = p1(foos, new List<string>() { "Name desc", "Count" });
-        Assert.Equal(3, sortedFoos.ElementAt(0).Count);
-        Assert.Equal(4, sortedFoos.ElementAt(1).Count);
-        Assert.Equal(1, sortedFoos.ElementAt(2).Count);
-        Assert.Equal(2, sortedFoos.ElementAt(3).Count);
     }
 
     private abstract class MockFilterActionBase : IFilterAction
