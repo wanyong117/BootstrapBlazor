@@ -224,6 +224,18 @@ public class LambadaExtensionsTest : BootstrapBlazorTestBase
         Assert.Equal(2, LambdaExtensions.ElementCount(p2));
     }
 
+    [Fact]
+    public void GetSortFunc_Ok()
+    {
+        var p1 = Utility.GetSortFunc<Foo>();
+        var foos = new Foo[]
+        {
+            new() { Count = 2 },
+            new() { Count = 1 }
+        };
+        var sortedFoos = p1(foos, nameof(Foo.Count), SortOrder.Asc);
+        Assert.Equal(1, sortedFoos.First().Count);
+    }
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
