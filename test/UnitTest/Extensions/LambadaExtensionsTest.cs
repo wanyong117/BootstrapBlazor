@@ -185,6 +185,15 @@ public class LambadaExtensionsTest
         var invoker = filter.GetFilterLambda<Foo>().Compile();
         Assert.True(invoker.Invoke(new Foo() { Name = "1test1" }));
     }
+
+    [Fact]
+    public void GetExpression_NotContains()
+    {
+        var filter = new FilterKeyValueAction() { FieldKey = "Name", FieldValue = "test", FilterAction = FilterAction.NotContains };
+        var invoker = filter.GetFilterLambda<Foo>().Compile();
+        Assert.True(invoker.Invoke(new Foo() { Name = "11" }));
+    }
+
     private abstract class MockFilterActionBase : IFilterAction
     {
         public abstract IEnumerable<FilterKeyValueAction> GetFilterConditions();
@@ -287,6 +296,13 @@ public class LambadaExtensionsTest
     {
         public Foo? Foo { get; set; }
 
+        public EnumEducation Education { get; set; }
+
+        public Cat? Cat { get; set; }
+    }
+
+    private class Cat
+    {
         public EnumEducation Education { get; set; }
     }
 }
