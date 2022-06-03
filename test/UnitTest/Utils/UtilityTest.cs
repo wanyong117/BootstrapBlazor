@@ -123,9 +123,25 @@ public class UtilityTest : BootstrapBlazorTestBase
         Assert.Equal(o.Name, mo.Name);
     }
 
+    [Fact]
+    public void GetNullableBoolItems_Ok()
+    {
+        var dummy = new Dummy();
+        var items = Utility.GetNullableBoolItems(dummy, nameof(Dummy.Complete));
+        Assert.Equal("请选择 ...", items.ElementAt(0).Text);
+        Assert.Equal("True", items.ElementAt(1).Text);
+        Assert.Equal("False", items.ElementAt(2).Text);
+
+        items = Utility.GetNullableBoolItems(typeof(Dummy), nameof(Dummy.Complete));
+        Assert.Equal("请选择 ...", items.ElementAt(0).Text);
+        Assert.Equal("True", items.ElementAt(1).Text);
+        Assert.Equal("False", items.ElementAt(2).Text);
+    }
+
     private class Dummy
     {
         public string? Name { get; set; }
+        public bool? Complete { get; set; }
     }
 
     private class MockClone : ICloneable
