@@ -3,6 +3,7 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 
@@ -75,13 +76,7 @@ public partial class Select<TValue> : ISelect
     [NotNull]
     public Func<string, IEnumerable<SelectedItem>>? OnSearchTextChanged { get; set; }
 
-
-    /// <summary>
-    /// 获得/设置 搜索文本发生变化时回调此方法
-    /// </summary>
-    [Parameter]
-    [NotNull]
-    public Func<string, IEnumerable<SelectedItem>>? OnItemsNotExisting { get; set; }
+     
 
 
     /// <summary>
@@ -148,6 +143,10 @@ public partial class Select<TValue> : ISelect
         {
             OnSearchTextChanged = text => Items.Where(i => i.Text.Contains(text, StringComparison));
         }
+        if (OnSearchTextChanged == null)
+        {
+            OnSearchTextChanged = text => Items.Where(i => i.Text.Contains(text, StringComparison));
+        }
 
         Childs = new List<SelectedItem>();
     }
@@ -181,17 +180,7 @@ public partial class Select<TValue> : ISelect
         else
         {
             DataSource = OnSearchTextChanged(SearchText).ToList();
-
-            if ((DataSource.Count()==0) && (OnItemsNotExisting!=null))
-            {
-                var newItems = OnItemsNotExisting(SearchText);
-                if ((newItems != null) && (newItems.Count() > 0))
-                {
-                    Items = newItems;
-                    DataSource = Items.ToList();
-
-                }
-            }
+            
         }
 
         SelectedItem = DataSource.FirstOrDefault(i => i.Value.Equals(CurrentValueAsString, StringComparison))
@@ -305,10 +294,30 @@ public partial class Select<TValue> : ISelect
             SearchText = string.Empty;
         }
     }
-
+     
     /// <summary>
-    /// 添加静态下拉项方法
+    /// 异步查询回调方法
     /// </summary>
-    /// <param name="item"></param>
-    public void Add(SelectedItem item) => Childs.Add(item);
+    [Parameter]
+    public Func<string, Task<IEnumerable<SelectedItem>>>? OnSearchTextEnterAsync { get; set; }
+    async void onSearchTextKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter")
+        {
+            if (string.IsNullOrWhiteSpace(SearchText.ToString()))
+            { 
+                return;
+            }
+            if (OnSearchTextEnterAsync != null)
+            {
+                Items= await OnSearchTextEnterAsync(SearchText);
+                StateHasChanged();
+            }
+        }
+    }
+            /// <summary>
+            /// 添加静态下拉项方法
+            /// </summary>
+            /// <param name="item"></param>
+            public void Add(SelectedItem item) => Childs.Add(item);
 }
