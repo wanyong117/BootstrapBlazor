@@ -75,6 +75,15 @@ public partial class Select<TValue> : ISelect
     [NotNull]
     public Func<string, IEnumerable<SelectedItem>>? OnSearchTextChanged { get; set; }
 
+
+    /// <summary>
+    /// 获得/设置 搜索文本发生变化时回调此方法
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public Func<string, IEnumerable<SelectedItem>>? OnItemsNotExisting { get; set; }
+
+
     /// <summary>
     /// 获得/设置 是否显示搜索框 默认为 false 不显示
     /// </summary>
@@ -172,6 +181,17 @@ public partial class Select<TValue> : ISelect
         else
         {
             DataSource = OnSearchTextChanged(SearchText).ToList();
+
+            if ((DataSource.Count()==0) && (OnItemsNotExisting!=null))
+            {
+                var newItems = OnItemsNotExisting(SearchText);
+                if ((newItems != null) && (newItems.Count() > 0))
+                {
+                    Items = newItems;
+                    DataSource = Items.ToList();
+
+                }
+            }
         }
 
         SelectedItem = DataSource.FirstOrDefault(i => i.Value.Equals(CurrentValueAsString, StringComparison))
