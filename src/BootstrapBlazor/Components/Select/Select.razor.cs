@@ -138,7 +138,7 @@ public partial class Select<TValue> : ISelect
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
+       
         if (OnSearchTextChanged == null)
         {
             OnSearchTextChanged = text => Items.Where(i => i.Text.Contains(text, StringComparison));
@@ -310,8 +310,9 @@ public partial class Select<TValue> : ISelect
             }
             if (OnSearchTextEnterAsync != null)
             {
-                Items= await OnSearchTextEnterAsync(SearchText);
-                StateHasChanged();
+                Items= await OnSearchTextEnterAsync(SearchText);                
+                //ResetSelectedItem(); 
+                //StateHasChanged();
             }
         }
     }
