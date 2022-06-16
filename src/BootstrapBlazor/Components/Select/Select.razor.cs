@@ -15,6 +15,17 @@ namespace BootstrapBlazor.Components;
 /// <typeparam name="TValue"></typeparam>
 public partial class Select<TValue> : ISelect
 {
+    private bool AutoExpend { get; set; }
+     
+
+    private string? ToggleClassString => CssBuilder.Default("dropdown-toggle")
+        .AddClass("show", AutoExpend)
+        .Build();
+    private string? DropdownClassString => CssBuilder.Default("dropdown-menu")
+    .AddClass("shadow")
+    .AddClass("show", AutoExpend)
+    .Build();
+
     private ElementReference SelectElement { get; set; }
 
     private JSInterop<Select<TValue>>? Interop { get; set; }
@@ -310,7 +321,9 @@ public partial class Select<TValue> : ISelect
             }
             if (OnSearchTextEnterAsync != null)
             {
-                Items= await OnSearchTextEnterAsync(SearchText);                
+                AutoExpend = true;
+                   Items = await OnSearchTextEnterAsync(SearchText);
+                AutoExpend = false;
                 //ResetSelectedItem(); 
                 //StateHasChanged();
             }

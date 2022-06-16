@@ -14,11 +14,12 @@
         @{
             ResetSelectedItem();
         }
-        <div class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="@ToggleClassString"  data-bs-toggle="dropdown" aria-expanded="false">
             <input type="text" id="@InputId" readonly disabled="@Disabled" placeholder="@PlaceHolder" class="@InputClassName" value="@SelectedItem?.Text" />
             <span class="@AppendClassName"><i class="fa fa-angle-up"></i></span>
         </div>
-        <div class="dropdown-menu shadow">
+        <div class="@DropdownClassString">
+			
             @if (ShowSearch)
             {
                 <div class="search">
